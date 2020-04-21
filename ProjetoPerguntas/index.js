@@ -3,7 +3,7 @@ const app = express(); // Iniciando o express
 const bodyParser = require("body-parser") //requisições post
 const connection = require("./database/database"); //Instanciando database
 const Pergunta = require("./database/Pergunta");
-const Responsta = require("./database/Resposta");
+const Resposta = require("./database/Resposta");
 //database
 
 connection
@@ -55,14 +55,32 @@ app.get("/pergunta_id/:id",(req,res)=>{
         where:{id: id}
     }).then(pergunta=>{
         if(pergunta != undefined){ //achou a pergunta
-            res.render("pergunta_id",{
-                pergunta: pergunta
+            Resposta.findAll({
+                where: {perguntaId: pergunta.id},
+                order: [['id','desc']]
+            }).then(respostas => {
+                res.render("pergunta_id",{
+                    pergunta: pergunta,
+                    respostas: respostas
+                });
             });
+           
         }else{// não encontrou
             res.redirect("/");
         }
     });
 })
+//Metodo de responder
+app.post("/responder",(req,res)=>{
+    var corpo = req.body.corpo;
+    var perguntaId = req.body.pergunta;
+    Resposta.create({
+        corpo:corpo,
+        perguntaId: perguntaId
+    }).then(() =>{
+        res.redirect("/pergunta_id/"+perguntaId);
+    });
+});
 
 
 //iniciando servidor
